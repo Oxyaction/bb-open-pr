@@ -1,11 +1,16 @@
 import Yargs from "yargs/yargs";
 import { Arguments } from 'yargs';
-import { syncDependency } from './commands/sync-dependency';
+import { Bitbucket } from "bitbucket";
+import { SyncDependencyCommand } from './commands/sync-dependency';
+import { BitbucketClient } from './services/bitbucket';
+import { NPMManager } from './services/npm-manager';
 
 type SyncDependencyArguments = {
-  repository: string;
+  workspace: string;
+  repositorySlug: string;
   dependencyName: string;
   dependencyVersion: string;
+  forceDowngrade: boolean;
 }
 
 Yargs(process.argv.slice(2))
@@ -14,7 +19,11 @@ Yargs(process.argv.slice(2))
     "sync-dependency",
     "Opens pull request to update provided dependency version if needed",
     {
-      repository: {
+      workspace: {
+        description: "Target Bitbucket workspace name",
+        demandOption: true,
+      },
+      repositorySlug: {
         description: "Target Bitbucket repository name",
         demandOption: true,
       },
@@ -26,9 +35,19 @@ Yargs(process.argv.slice(2))
         description: "Dependency version to update",
         demandOption: true,
       },
+      forceDowngrade: {
+        description: "Force downgrade dependency version if needed",
+        type: "boolean",
+        default: false,
+      }
     },
     async (args: Arguments<SyncDependencyArguments>) => {
-      await syncDependency(args.repository, args.dependencyName, args.dependencyVersion);
+      const bitbucket = new Bitbucket();
+      const bitbucketClient = new BitbucketClient(bitbucket, args.workspace, args.repositorySlug);
+      const npmManager = new NPMManager();
+      const syncDependencyCommand = new SyncDependencyCommand(bitbucketClient, npmManager);
+
+      await syncDependencyCommand.execute(args.dependencyName, args.dependencyVersion, args.forceDowngrade);
     }
   )
   .help()

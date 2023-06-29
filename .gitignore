@@ -46,3 +46,4 @@ tsconfig.tsbuildinfo
 !.yarn/sdks
 !.yarn/versions
 .terraform
+test.ts
