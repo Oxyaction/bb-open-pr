@@ -5,14 +5,7 @@ import { SyncDependencyCommand } from './commands/sync-dependency';
 import { BitbucketClient } from './services/bitbucket';
 import { NPMManager } from './services/npm-manager';
 import * as authPrompts from './authenticate';
-
-type SyncDependencyArguments = {
-  workspace: string;
-  repositorySlug: string;
-  dependencyName: string;
-  dependencyVersion: string;
-  forceDowngrade: boolean;
-};
+import { SyncDependencyArguments } from './types';
 
 const result = Yargs(process.argv.slice(2))
   .scriptName('bitbucket-cli.js')
@@ -44,6 +37,7 @@ const result = Yargs(process.argv.slice(2))
     },
     async (args: Arguments<SyncDependencyArguments>) => {
       try {
+        // TODO: Auth logic could be extracted to Yargs middleware
         const { authType } = await authPrompts.promptAuthenticationType();
         let bitbucket: APIClient;
 

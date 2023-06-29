@@ -8,9 +8,9 @@ Provides a cli to operate bitbucket.
 pnpm ts-node src/bitbucket-cli.ts --help
 ```
 
-
+## Commands:
 ### sync-dependency
-Command used to open a Bitbucket pull request to update a dependency (if needed).
+Command used to open a Bitbucket pull request to update a dependency (if needed). Run `--help` to see all command options.
 
 ```
 pnpm ts-node src/bitbucket-cli.ts sync-dependency --help

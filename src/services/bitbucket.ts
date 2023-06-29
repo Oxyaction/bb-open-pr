@@ -130,7 +130,7 @@ export class BitbucketClient {
     });
 
     if (!fileContent) {
-      throw new Error(`No file found at path ${path}`);
+      throw new Error(`No file found at path '${path}'`);
     }
 
     return fileContent as string;
