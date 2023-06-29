@@ -13,7 +13,7 @@ export class SyncDependencyCommand {
     console.log(`syncing dependency ${dependencyName} to version ${dependencyVersion}`);
 
     if (!validateVersion(dependencyVersion)) {
-      throw new Error(`Invalid version provided: ${dependencyVersion}`);
+      throw new Error(`Invalid version provided: '${dependencyVersion}'`);
     }
 
     const devBranch = await this.bitbucketClient.getDevelopmentBranch();

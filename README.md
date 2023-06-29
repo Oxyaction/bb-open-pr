@@ -19,3 +19,13 @@ General usage:
 ```
 pnpm ts-node src/bitbucket-cli.ts sync-dependency --workspace=akompaniets --repositorySlug=pr-opener-test --dependencyName=lodash --dependencyVersion=1.2.3
 ```
+
+### Utils
+Lint:
+```
+pnpm lint
+```
+Tests:
+```
+pnpm test
+```
