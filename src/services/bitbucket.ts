@@ -1,4 +1,5 @@
 import { APIClient } from "bitbucket";
+import FormData from "form-data";
 
 export class BitbucketClient {
   constructor(
@@ -7,14 +8,26 @@ export class BitbucketClient {
     protected readonly repoSlug: string
   ) {}
 
-  async getPackageJSON(): Promise<string> {
-    const devBranch = await this.getDevelopmentBranch();
-    const lastCommit = await this.getLastBranchCommit(devBranch);
-    const rawPackageJSON = await this.getFileContent(lastCommit, "package.json");
+  /**
+   * Returns latest file content from provided branch
+   * @param branch
+   * @param fileName
+   * @returns
+   */
+  async getLatestFileContent(
+    branch: string,
+    fileName: string
+  ): Promise<string> {
+    const lastCommit = await this.getLastBranchCommit(branch);
+    const rawPackageJSON = await this.getFileContent(lastCommit, fileName);
     return rawPackageJSON;
   }
 
-  protected async getDevelopmentBranch(): Promise<string> {
+  /**
+   * Get development branch name
+   * @returns
+   */
+  async getDevelopmentBranch(): Promise<string> {
     const { data } = await this.client.branching_model.get({
       repo_slug: this.repoSlug,
       workspace: this.workspace,
@@ -26,6 +39,79 @@ export class BitbucketClient {
     }
 
     return devBranch;
+  }
+
+  /**
+   * Create new branch from provided branch
+   * @param branch
+   * @param fromBranch
+   */
+  async createBranch(branch: string, fromBranch: string): Promise<void> {
+    const { data, headers } = await this.client.refs.createBranch({
+      repo_slug: this.repoSlug,
+      workspace: this.workspace,
+      _body: {
+        name: branch,
+        target: {
+          hash: fromBranch,
+        },
+      },
+    });
+  }
+
+  /**
+   * Creates new commit for a single file in provided branch
+   * @param branch
+   * @param message
+   * @param fileName
+   * @param content
+   */
+  async createCommit(
+    branch: string,
+    message: string,
+    fileName: string,
+    content: string
+  ) {
+    const contentBuffer = Buffer.from(content, "utf8");
+
+    const form = new FormData();
+    form.append(fileName, contentBuffer);
+
+    await this.client.source.createFileCommit({
+      repo_slug: this.repoSlug,
+      workspace: this.workspace,
+      branch,
+      message,
+      _body: form,
+    });
+  }
+
+  async createPullRequest(
+    fromBranch: string,
+    targetBranch: string,
+    title: string,
+    description: string,
+  ) {
+    const { data, headers } = await this.client.pullrequests.create({
+      repo_slug: this.repoSlug,
+      workspace: this.workspace,
+      _body: {
+        type: "pullrequest",
+        title: title,
+        description,
+        close_source_branch: true,
+        source: {
+          branch: {
+            name: fromBranch,
+          },
+        },
+        destination: {
+          branch: {
+            name: targetBranch,
+          },
+        },
+      },
+    });
   }
 
   protected async getLastBranchCommit(branch: string): Promise<string> {
@@ -43,7 +129,10 @@ export class BitbucketClient {
     return lastCommit.hash!;
   }
 
-  protected async getFileContent(commit: string, path: string): Promise<string> {
+  protected async getFileContent(
+    commit: string,
+    path: string
+  ): Promise<string> {
     const { data: fileContent } = await this.client.source.read({
       repo_slug: this.repoSlug,
       workspace: this.workspace,
@@ -56,20 +145,5 @@ export class BitbucketClient {
     }
 
     return fileContent as string;
-  }
-
-  public async createBranch(branchName: string, fromBranch: string): Promise<void> {
-    const { data, headers } = await this.client.refs.createBranch({
-      repo_slug: this.repoSlug,
-      workspace: this.workspace,
-      _body: {
-        name: branchName,
-        target: {
-          hash: fromBranch,
-        },
-      },
-    });
-
-    console.log(data, headers);
   }
 }

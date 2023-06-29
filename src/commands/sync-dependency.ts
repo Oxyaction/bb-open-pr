@@ -1,7 +1,6 @@
 import semver from 'semver';
 import { BitbucketClient }  from '../services/bitbucket';
 import { NPMManager } from '../services/npm-manager';
-import { Version } from '../types';
 
 export class SyncDependencyCommand {
   constructor(
@@ -16,7 +15,10 @@ export class SyncDependencyCommand {
       throw new Error(`Invalid version provided: ${dependencyVersion}`);
     }
 
-    const currentDependencyVersion = await this.getDependencyVersion(dependencyName);
+    const devBranch = await this.bitbucketClient.getDevelopmentBranch();
+    const packageJSON = await this.bitbucketClient.getLatestFileContent(devBranch, 'package.json');
+    this.npmManager.setRawJSON(packageJSON);
+    const currentDependencyVersion = this.npmManager.getDependencyVersion(dependencyName);
 
     if (semver.gt(currentDependencyVersion.version, dependencyVersion) && !forceDowngrade) {
       throw new Error(`Cannot downgrade dependency ${dependencyName} from ${currentDependencyVersion.version} to ${dependencyVersion}`);
@@ -27,15 +29,21 @@ export class SyncDependencyCommand {
       return;
     }
 
-    // const newPackageJSON = this.npmManager.updateDependencyVersion(currentDependencyVersion, dependencyVersion);
+    const newPackageJSON = this.npmManager.updateDependencyVersion(currentDependencyVersion, dependencyVersion);
+    const newBranch = `update-${dependencyName}-to-${dependencyVersion}`;
+    const title = `Update ${dependencyName} to ${dependencyVersion}`;
+    const description = `This is automatically-generated PR to update ${dependencyName} to ${dependencyVersion}`;
+    
+
+    console.log('creating branch', newBranch);
+    await this.bitbucketClient.createBranch(newBranch, devBranch);
+    console.log('creating commit', newBranch);
+    await this.bitbucketClient.createCommit(newBranch, title, 'package.json', newPackageJSON);
+
+    console.log('creating pr');
+    await this.bitbucketClient.createPullRequest(newBranch, devBranch, title, description);
   }
 
-  protected async getDependencyVersion(dependencyName: string): Promise<Version> {
-    const packageJSON = await this.bitbucketClient.getPackageJSON();
-    this.npmManager.setRawJSON(packageJSON);
-    const currentDependencyVersion = this.npmManager.getDependencyVersion(dependencyName);
-    return currentDependencyVersion;
-  }
 }
 
 function validateVersion(version: string): boolean {

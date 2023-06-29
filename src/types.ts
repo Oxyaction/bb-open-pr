@@ -1,6 +1,6 @@
 
 export type Version = {
-  dependency: string;
+  name: string;
   rawVersion: string;
   version: string;
   type: string;

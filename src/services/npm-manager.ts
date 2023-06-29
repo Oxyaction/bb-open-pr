@@ -21,7 +21,7 @@ export class NPMManager {
       const rawVersion = this.npmConfig[dep]?.[dependency];
       if (rawVersion) {
         return {
-          dependency,
+          name: dependency,
           rawVersion: rawVersion as string,
           version: semver.coerce(rawVersion).version,
           type: dep,
@@ -33,8 +33,12 @@ export class NPMManager {
   }
 
   updateDependencyVersion(version: Version, newVersion: string): string {
-    const newPackageJSON = this.npmConfig;
-    newPackageJSON[version.type][version.dependency] = newVersion;
-    return JSON.stringify(newPackageJSON);
+    if (!this.npmConfig[version.type][version.name]) {
+      throw new Error(`Dependency ${version.type}.${version.name} not found`);
+    }
+
+    const npmConfigCopy = JSON.parse(JSON.stringify(this.npmConfig));
+    npmConfigCopy[version.type][version.name] = newVersion;
+    return JSON.stringify(npmConfigCopy, null, 2);
   }
 }

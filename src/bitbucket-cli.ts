@@ -1,9 +1,10 @@
 import Yargs from "yargs/yargs";
 import { Arguments } from 'yargs';
-import { Bitbucket } from "bitbucket";
+import { Bitbucket, APIClient } from "bitbucket";
 import { SyncDependencyCommand } from './commands/sync-dependency';
 import { BitbucketClient } from './services/bitbucket';
 import { NPMManager } from './services/npm-manager';
+import * as authPrompts from './authenticate';
 
 type SyncDependencyArguments = {
   workspace: string;
@@ -42,12 +43,37 @@ Yargs(process.argv.slice(2))
       }
     },
     async (args: Arguments<SyncDependencyArguments>) => {
-      const bitbucket = new Bitbucket();
-      const bitbucketClient = new BitbucketClient(bitbucket, args.workspace, args.repositorySlug);
-      const npmManager = new NPMManager();
-      const syncDependencyCommand = new SyncDependencyCommand(bitbucketClient, npmManager);
+      try {
+        const { authType } = await authPrompts.promptAuthenticationType();
+        let bitbucket: APIClient;
+        
+        if (authType === 'Token') {
+          const { token } = await authPrompts.promptToken();
+          bitbucket = new Bitbucket({
+            auth: {
+              token,
+            },
+          });
+        } else if (authType === 'Username/Password') {
+          const { username, password } = await authPrompts.promptUsernamePassword();
+          bitbucket = new Bitbucket({
+            auth: {
+              username,
+              password,
+            },
+          });
+        } else {
+          throw new Error('Invalid authentication type');
+        }
 
-      await syncDependencyCommand.execute(args.dependencyName, args.dependencyVersion, args.forceDowngrade);
+        const bitbucketClient = new BitbucketClient(bitbucket, args.workspace, args.repositorySlug);
+        const npmManager = new NPMManager();
+        const syncDependencyCommand = new SyncDependencyCommand(bitbucketClient, npmManager);
+
+        await syncDependencyCommand.execute(args.dependencyName, args.dependencyVersion, args.forceDowngrade);
+      } catch (error) {
+        console.error('An error occurred:', error);
+      }
     }
   )
   .help()

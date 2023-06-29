@@ -23,6 +23,9 @@
     "inlineSources": false,
     "preserveWatchOutput": true
   },
-  "include": ["src/**/*.ts"],
+  "ts-node": {
+    "esm": true
+  },
+  "include": ["src/**/*.ts", "src/authenticate.ts"],
   "exclude": ["node_modules", ".turbo", "**/*.spec.ts", "dist", "coverage"]
 }
