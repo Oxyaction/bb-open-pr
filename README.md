@@ -1,5 +1,7 @@
 # Bitbucket-cli utils
 
+![build](https://github.com/Oxyaction/bb-open-pr/actions/workflows/build.yml/badge.svg)
+
 Provides a cli to operate bitbucket.
 
 ### See all commands
