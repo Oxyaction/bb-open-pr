@@ -33,10 +33,18 @@ describe('BitbucketClient', () => {
         }),
       },
       refs: {
-        createBranch: jest.fn(),
+        createBranch: jest.fn().mockResolvedValue(null),
       },
       pullrequests: {
-        create: jest.fn(),
+        create: jest.fn().mockResolvedValue({
+          data: {
+            links: {
+              html: {
+                href: 'test-pull-request-url',
+              },
+            },
+          },
+        }),
       },
     } as unknown as APIClient;
     bitbucketClient = new BitbucketClient(client, 'test-workspace', 'test-repoSlug');
@@ -147,7 +155,7 @@ describe('BitbucketClient', () => {
 
   describe('createPullRequest', () => {
     it('should create new pull request', async () => {
-      await bitbucketClient.createPullRequest(
+      const link = await bitbucketClient.createPullRequest(
         'test-fromBranch',
         'test-targetBranch',
         'test-title',
@@ -156,6 +164,7 @@ describe('BitbucketClient', () => {
 
       const calledWith = (client.pullrequests.create as jest.Mock).mock.calls[0][0];
 
+      expect(link).toBe('test-pull-request-url');
       expect(calledWith.repo_slug).toBe('test-repoSlug');
       expect(calledWith.workspace).toBe('test-workspace');
       expect(calledWith._body).toStrictEqual({

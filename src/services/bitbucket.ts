@@ -83,8 +83,8 @@ export class BitbucketClient {
     targetBranch: string,
     title: string,
     description: string
-  ) {
-    await this.client.pullrequests.create({
+  ): Promise<string> {
+    const { data } = await this.client.pullrequests.create({
       repo_slug: this.repoSlug,
       workspace: this.workspace,
       _body: {
@@ -104,6 +104,8 @@ export class BitbucketClient {
         },
       },
     });
+
+    return data.links!.html!.href!;
   }
 
   protected async getLastBranchCommit(branch: string): Promise<string> {
