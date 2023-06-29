@@ -1,0 +1,1 @@
+# Bitbucket pr opener script
