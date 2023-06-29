@@ -1,6 +1,7 @@
 import semver from 'semver';
-import { BitbucketClient }  from '../services/bitbucket';
+import { BitbucketClient } from '../services/bitbucket';
 import { NPMManager } from '../services/npm-manager';
+import { validateVersion } from '../utils';
 
 export class SyncDependencyCommand {
   constructor(
@@ -10,7 +11,7 @@ export class SyncDependencyCommand {
 
   async execute(dependencyName: string, dependencyVersion: string, forceDowngrade: boolean) {
     console.log(`syncing dependency ${dependencyName} to version ${dependencyVersion}`);
-    
+
     if (!validateVersion(dependencyVersion)) {
       throw new Error(`Invalid version provided: ${dependencyVersion}`);
     }
@@ -21,7 +22,9 @@ export class SyncDependencyCommand {
     const currentDependencyVersion = this.npmManager.getDependencyVersion(dependencyName);
 
     if (semver.gt(currentDependencyVersion.version, dependencyVersion) && !forceDowngrade) {
-      throw new Error(`Cannot downgrade dependency ${dependencyName} from ${currentDependencyVersion.version} to ${dependencyVersion}`);
+      throw new Error(
+        `Cannot downgrade dependency ${dependencyName} from ${currentDependencyVersion.version} to ${dependencyVersion}`
+      );
     }
 
     if (currentDependencyVersion.version === dependencyVersion) {
@@ -29,11 +32,13 @@ export class SyncDependencyCommand {
       return;
     }
 
-    const newPackageJSON = this.npmManager.updateDependencyVersion(currentDependencyVersion, dependencyVersion);
+    const newPackageJSON = this.npmManager.updateDependencyVersion(
+      currentDependencyVersion,
+      dependencyVersion
+    );
     const newBranch = `update-${dependencyName}-to-${dependencyVersion}`;
     const title = `Update ${dependencyName} to ${dependencyVersion}`;
     const description = `This is automatically-generated PR to update ${dependencyName} to ${dependencyVersion}`;
-    
 
     console.log('creating branch', newBranch);
     await this.bitbucketClient.createBranch(newBranch, devBranch);
@@ -43,9 +48,4 @@ export class SyncDependencyCommand {
     console.log('creating pr');
     await this.bitbucketClient.createPullRequest(newBranch, devBranch, title, description);
   }
-
-}
-
-function validateVersion(version: string): boolean {
-  return semver.valid(version) !== null;
 }

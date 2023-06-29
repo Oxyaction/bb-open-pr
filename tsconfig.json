@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Default",
   "compilerOptions": {
+    "rootDir": ".",
     "outDir": "dist",
     "types": ["node", "jest"],
     "module": "commonjs",
@@ -26,6 +27,6 @@
   "ts-node": {
     "esm": true
   },
-  "include": ["src/**/*.ts", "src/authenticate.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", ".turbo", "**/*.spec.ts", "dist", "coverage"]
 }

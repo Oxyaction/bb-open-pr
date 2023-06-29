@@ -1,5 +1,5 @@
-import { JSONSchemaForNPMPackageJsonFiles } from "@schemastore/package";
-import semver from "semver";
+import { JSONSchemaForNPMPackageJsonFiles } from '@schemastore/package';
+import semver from 'semver';
 import { Version } from '../types';
 
 export class NPMManager {
@@ -11,10 +11,10 @@ export class NPMManager {
 
   getDependencyVersion(dependency: string): Version {
     const availableDependencies = [
-      "dependencies",
-      "devDependencies",
-      "peerDependencies",
-      "optionalDependencies",
+      'dependencies',
+      'devDependencies',
+      'peerDependencies',
+      'optionalDependencies',
     ];
 
     for (const dep of availableDependencies) {

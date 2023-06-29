@@ -1,5 +1,5 @@
-import { APIClient } from "bitbucket";
-import FormData from "form-data";
+import { APIClient } from 'bitbucket';
+import FormData from 'form-data';
 
 export class BitbucketClient {
   constructor(
@@ -14,10 +14,7 @@ export class BitbucketClient {
    * @param fileName
    * @returns
    */
-  async getLatestFileContent(
-    branch: string,
-    fileName: string
-  ): Promise<string> {
+  async getLatestFileContent(branch: string, fileName: string): Promise<string> {
     const lastCommit = await this.getLastBranchCommit(branch);
     const rawPackageJSON = await this.getFileContent(lastCommit, fileName);
     return rawPackageJSON;
@@ -35,7 +32,7 @@ export class BitbucketClient {
 
     const devBranch = data.development?.name;
     if (!devBranch) {
-      throw new Error("No development branch found");
+      throw new Error('No development branch found');
     }
 
     return devBranch;
@@ -47,7 +44,7 @@ export class BitbucketClient {
    * @param fromBranch
    */
   async createBranch(branch: string, fromBranch: string): Promise<void> {
-    const { data, headers } = await this.client.refs.createBranch({
+    await this.client.refs.createBranch({
       repo_slug: this.repoSlug,
       workspace: this.workspace,
       _body: {
@@ -66,13 +63,8 @@ export class BitbucketClient {
    * @param fileName
    * @param content
    */
-  async createCommit(
-    branch: string,
-    message: string,
-    fileName: string,
-    content: string
-  ) {
-    const contentBuffer = Buffer.from(content, "utf8");
+  async createCommit(branch: string, message: string, fileName: string, content: string) {
+    const contentBuffer = Buffer.from(content, 'utf8');
 
     const form = new FormData();
     form.append(fileName, contentBuffer);
@@ -90,13 +82,13 @@ export class BitbucketClient {
     fromBranch: string,
     targetBranch: string,
     title: string,
-    description: string,
+    description: string
   ) {
-    const { data, headers } = await this.client.pullrequests.create({
+    await this.client.pullrequests.create({
       repo_slug: this.repoSlug,
       workspace: this.workspace,
       _body: {
-        type: "pullrequest",
+        type: 'pullrequest',
         title: title,
         description,
         close_source_branch: true,
@@ -129,10 +121,7 @@ export class BitbucketClient {
     return lastCommit.hash!;
   }
 
-  protected async getFileContent(
-    commit: string,
-    path: string
-  ): Promise<string> {
+  protected async getFileContent(commit: string, path: string): Promise<string> {
     const { data: fileContent } = await this.client.source.read({
       repo_slug: this.repoSlug,
       workspace: this.workspace,
