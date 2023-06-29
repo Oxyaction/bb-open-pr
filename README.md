@@ -19,6 +19,8 @@ General usage:
 ```
 pnpm ts-node src/bitbucket-cli.ts sync-dependency --workspace=akompaniets --repositorySlug=pr-opener-test --dependencyName=lodash --dependencyVersion=5.0.5
 ```
+### Used target test repo:
+https://bitbucket.org/akompaniets/pr-opener-test/src/master/
   
 ### Utils  
 Lint:  
